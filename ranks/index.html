@@ -1,0 +1,15 @@
+<html>
+<head>
+    <title>ID Image Retriever</title>
+</head>
+<body>
+    <h1>ID Image Retriever</h1>
+    <p>Enter an ID to retrieve the corresponding image:</p>
+    <form>
+        <input type="text" name="id" placeholder="ID">
+        <input type="submit" value="Submit">
+    </form>
+    <p>Image:</p>
+    <img src="https://suipunks.mypinata.cloud/ipfs/Qmeb6URxqR9UFysw2fKBgrGtqbdxXdHAtfd1PxM38HBcea/<?php echo $_GET['id']; ?>.png">
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="rarity.css">
+    <title>Sui Punks - Rarity</title>
+    <meta name="title" content="Sui Punks" />
+    <meta name="description" content="SuiPunks PFPs that proves you are one of the OGs in the Sui Blockchain💧
+" />
+    <meta property="twitter:image" content="img/suipp.png" />
+
+    <style>
+        /* Grid item styles */
+        .nft-item {
+            width: 100px;
+            height: 150px;
+            padding: 10px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            margin: 5px;
+        }
+
+        .nft-image {
+            width: 50px;
+            height: 50px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="header">SUI PUNKS</header>
+    <main>
+
+        <h1 class="linear-wipe">how rare is my suipunk?</h1>
+
+        <form id="rankForm">
+            <label for="idInput" style="font-size: 70%;">enter id:</label>
+            <input type="number" id="idInput" name="idInput">
+            <button type="submit">find rank</button>
+        </form>
+
+        <div id="nft-big">
+
+            
+            <div class="imgres">
+                <img id="imageResult" src="" alt="Rank Image" style="display: none; width: 80%; height: 80%;border: black 4px solid;">
+            </div>
+
+            <p id="name" style="color: rgb(255, 255, 255); margin-top: 3%; margin-bottom: 5px;"></p>
+            <p id="result" style="color: rgb(190, 255, 255);"></p>
+
+
+        </div>
+
+
+
+       
+
+        <!-- Grid container -->
+        <div id="nftGrid" style="display: flex; flex-wrap: wrap;justify-content: space-evenly; padding-top: 1%; margin-top: 2%;"></div>
+
+         <!-- Sorting dropdown -->
+         <label for="sortOptions" style="font-size: 75%; margin-bottom: 2%; margin-top: 2%;">sort by:</label>
+         <select id="sortOptions">
+             <option value="rarity">rarity</option>
+             <option value="id">id</option>
+         </select>
+
+        <!-- Pagination controls -->
+        <div style="margin-top: 2%; margin-bottom: 2%;">
+            <button class="pagination-button" id="prevPage" disabled>previous</button>
+            <span id="currentPage">1</span> / <span id="totalPages"></span>
+            <button class="pagination-button" id="nextPage" disabled>next</button>
+        </div>
+
+        <script>
+            // Global variables
+            let currentPage = 1;
+            const itemsPerPage = 30;
+
+            // Fetch the JSON data from the file
+            async function fetchData() {
+                const response = await fetch('rankings.json');
+                const data = await response.json();
+                return data;
+            }
+
+            // Find the rank by ID
+            function findRankById(data, id) {
+                for (const item of data) {
+                    if (item.id === id) {
+                        return item.rank;
+                    }
+                }
+                return null;
+            }
+
+            // Process the form submission
+            document.getElementById('rankForm').addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const idInput = document.getElementById('idInput').value;
+                const data = await fetchData();
+                const rank = findRankById(data, idInput);
+                const resultElement = document.getElementById('result');
+                const nameElement = document.getElementById('name');
+                const imageElement = document.getElementById('imageResult');
+                const divElement = document.getElementById('nft-big');
+                Element = document.getElementById('imageResult');
+
+                // Hide the image immediately after the button is pressed
+                imageElement.style.display = 'none';
+
+                if (rank !== null) {
+                    nameElement.textContent = `Sui Punk #${idInput}`;
+                    resultElement.textContent = `Rank: ${rank}`;
+                    imageElement.src = `https://ipfs.bluemove.net/uploads2/sui-punks/images/${idInput}.png`;
+                    imageElement.style.display = 'flex';
+                    divElement.style.display = 'block';
+                } else {
+                    resultElement.textContent = 'ID not found';
+                    nameElement.textContent = ``;
+                }
+            });
+
+            // Sort the data based on the selected option
+            function sortData(data, sortBy) {
+                if (sortBy === 'rarity') {
+                    return data.sort((a, b) => a.rank - b.rank);
+                } else {
+                    return data.sort((a, b) => parseInt(a.id) - parseInt(b.id));
+                }
+            }
+
+            // Display NFTs in a grid with pagination
+            async function displayNFTsGrid(page) {
+                const data = await fetchData();
+                const sortedData = sortData(data, document.getElementById('sortOptions').value);
+                const gridContainer = document.getElementById('nftGrid');
+                gridContainer.innerHTML = '';
+
+                const startIndex = (page - 1) * itemsPerPage;
+                const endIndex = startIndex + itemsPerPage;
+
+                for (let i = startIndex; i < endIndex && i < sortedData.length; i++) {
+                    const item = sortedData[i];
+                    const gridItem = document.createElement('div');
+                    gridItem.classList.add('nft-item');
+
+                    const idElement = document.createElement('span');
+                    idElement.textContent = `ID: ${item.id}`;
+                    gridItem.appendChild(idElement);
+
+                    const rankElement = document.createElement('span');
+                    rankElement.textContent = `Rank: ${item.rank}`;
+                    gridItem.appendChild(rankElement);
+
+                    const imageElement = document.createElement('img');
+                    imageElement.src = `https://ipfs.bluemove.net/uploads2/sui-punks/images/${item.id}.png`;
+                    imageElement.classList.add('nft-image');
+                    gridItem.appendChild(imageElement);
+
+                    gridContainer.appendChild(gridItem);
+                }
+
+                // Update pagination controls
+                document.getElementById('currentPage').textContent = page;
+                document.getElementById('totalPages').textContent = Math.ceil(sortedData.length / itemsPerPage);
+                document.getElementById('prevPage').disabled = page === 1;
+                document.getElementById('nextPage').disabled = page * itemsPerPage >= sortedData.length;
+            }
+
+            // Initialize the NFTs grid
+            displayNFTsGrid(currentPage);
+
+            // Handle sorting changes
+            document.getElementById('sortOptions').addEventListener('change', () => {
+                currentPage = 1;
+                displayNFTsGrid(currentPage);
+            });
+
+            // Handle pagination controls
+            document.getElementById('prevPage').addEventListener('click', () => {
+                currentPage--;
+                displayNFTsGrid(currentPage);
+            });
+
+            document.getElementById('nextPage').addEventListener('click', () => {
+                currentPage++;
+                displayNFTsGrid(currentPage);
+            });
+        </script>
+    </main>
+
+</body>
+
+<div class="area">
+    <ul class="circles">
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+    </ul>
+</div>
+
+</html>
